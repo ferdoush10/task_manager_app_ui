@@ -1,16 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:task_manager_app/ui/screens/login_screen.dart';
-import 'package:task_manager_app/ui/widget/body_background.dart';
 
+import '../data/network_caller/network_caller.dart';
+import '../data/utility/urls.dart';
+import 'login_screen.dart';
+import '../widget/body_background.dart';
+import '../widget/snack_message.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({super.key});
+  const ResetPasswordScreen({
+    super.key,
+    required this.email,
+    required this.otp,
+  });
+
+  final String email;
+  final String otp;
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+  final networkCaller = NetworkCaller();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _cPasswordController = TextEditingController();
+
+  resetPassword() async {
+    final response = await networkCaller.postRequest(
+      Urls.recoverResetPass,
+      body: {
+        "email": widget.email,
+        "OTP": widget.otp,
+        "password": _passwordController.text.trim(),
+      },
+    );
+    if (response.statusCode == 200) {
+      print(response.jsonResponse);
+      if (response.jsonResponse['status'] == 'success') {
+        // ignore: use_build_context_synchronously
+        Navigator.push(context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()));
+      } else {
+        // ignore: use_build_context_synchronously
+        showSnackMessage(
+            context, 'Error occured when changing password, try again!');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,6 +71,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   const SizedBox(height: 16),
                   //TextField For Email
                   TextFormField(
+                    controller: _passwordController,
                     obscureText: true,
                     decoration: const InputDecoration(
                       hintText: "Password",
@@ -42,10 +80,18 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   const SizedBox(height: 16),
                   //TextField For Email
                   TextFormField(
+                    controller: _cPasswordController,
                     obscureText: true,
                     decoration: const InputDecoration(
                       hintText: "Confirm password",
                     ),
+                    validator: (v) {
+                      if (v != _passwordController.text) {
+                        return 'Confirm password';
+                      } else {
+                        return null;
+                      }
+                    },
                   ),
 
                   const SizedBox(height: 16),
@@ -53,7 +99,11 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                        onPressed: () {}, child: const Text('Confirm')),
+                      onPressed: () async {
+                        await resetPassword();
+                      },
+                      child: const Text('Confirm'),
+                    ),
                   ),
                   const SizedBox(height: 48),
                   Row(
@@ -88,5 +138,12 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    _cPasswordController.dispose();
+    super.dispose();
   }
 }

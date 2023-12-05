@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:task_manager_app/ui/widget/body_background.dart';
+import '../data/utility/urls.dart';
+import '../widget/body_background.dart';
+
+import '../data/network_caller/network_caller.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -9,6 +12,8 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  final networkCaller = NetworkCaller();
+
   final TextEditingController _emailTEController = TextEditingController();
   final TextEditingController _firstNameTEController = TextEditingController();
   final TextEditingController _lastNameTEController = TextEditingController();
@@ -16,10 +21,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _passwordTEController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  //Registration using signUp method
-
+  //TODO : #2 Registration using signUp method
   Future<void> _signUp() async {
-    if (_formKey.currentState!.validate()) {}
+    final response = await networkCaller.postRequest(
+      Urls.registration,
+      body: {
+        "email": _emailTEController.text.trim(),
+        "firstName": _firstNameTEController.text.trim(),
+        "lastName": _lastNameTEController.text.trim(),
+        "mobile": _mobileTEController.text.trim(),
+        "password": _passwordTEController.text.trim(),
+        "photo":
+            "https://www.google.com/url?sa=i&url=https%3A%2F%2Fpixabay.com%2Fimages%2Fsearch%2Fwhite%2F&psig=AOvVaw0tHIIu0SzIjAxHVLT4rpeK&ust=1701871845545000&source=images&cd=vfe&ved=0CBIQjRxqFwoTCOCc4vC8-IIDFQAAAAAdAAAAABAE",
+      },
+    );
+    if (response.statusCode == 200) {
+      // ignore: use_build_context_synchronously
+      Navigator.pop(context);
+      // ignore: use_build_context_synchronously
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration Completed ! Please login')),
+      );
+    }
   }
 
   @override
@@ -128,8 +151,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           onPressed: () {
                             _signUp();
                           },
-                          child:
-                              const Icon(Icons.arrow_circle_right_outlined)),
+                          child: const Icon(Icons.arrow_circle_right_outlined)),
                     ),
                     const SizedBox(height: 48),
 

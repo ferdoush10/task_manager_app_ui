@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:task_manager_app/ui/screens/login_screen.dart';
-import 'package:task_manager_app/ui/widget/body_background.dart';
+import '../controllers/auth_controller.dart';
+import 'login_screen.dart';
+import '../widget/body_background.dart';
 
+import 'main_bottom_nav_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,14 +20,23 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   void gotoLogin() async {
-    
-    Future.delayed(const Duration(seconds: 3)).then((value) {
-      Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(
-              builder: (context) =>const LoginScreen()),
-          (route) => false);
-    });
+    final status = await AuthController.checkAuthState();
+    if (!status) {
+      Future.delayed(const Duration(seconds: 3)).then((value) {
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+            (route) => false);
+      });
+    } else {
+      Future.delayed(const Duration(seconds: 3)).then((value) {
+        Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+                builder: (context) => const MainBottomNavScreen()),
+            (route) => false);
+      });
+    }
   }
 
   @override

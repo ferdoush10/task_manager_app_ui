@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:task_manager_app/ui/widget/body_background.dart';
-import 'package:task_manager_app/ui/widget/profile_summary_card.dart';
-
+import '../data/models/network_response.dart';
+import '../data/network_caller/network_caller.dart';
+import '../data/utility/urls.dart';
+import '../widget/body_background.dart';
+import '../widget/profile_summary_card.dart';
+import '../widget/snack_message.dart';
 
 class AddNewTaskScreen extends StatefulWidget {
   const AddNewTaskScreen({super.key});
@@ -11,11 +14,14 @@ class AddNewTaskScreen extends StatefulWidget {
 }
 
 class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
+  bool _createTaskInProgress = false;
   final TextEditingController _subjetTEController = TextEditingController();
   final TextEditingController _descriptionTEController =
       TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
- 
+
+  final networkCaller = NetworkCaller();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,11 +73,15 @@ class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
                       ),
                       SizedBox(
                         width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: (){},
-                          child:
-                              const Icon(Icons.arrow_circle_right_outlined),
-                        ),
+                        child: _createTaskInProgress
+                            ? const Center(
+                                child: CircularProgressIndicator(),
+                              )
+                            : ElevatedButton(
+                                onPressed: _createTask,
+                                child: const Icon(
+                                    Icons.arrow_circle_right_outlined),
+                              ),
                       ),
                     ],
                   ),
@@ -84,36 +94,36 @@ class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
     );
   }
 
-  // Future<void> _createTask() async {
-  //   if (_formKey.currentState!.validate()) {
-  //     _createTaskInProgress = true;
-  //     if (mounted) {
-  //       setState(() {});
-  //     }
-  //     final NetworkResponse response =
-  //         await NetworkCaller().postRequest(Urls.createTask, body: {
-  //       "title": _subjetTEController.text.trim(),
-  //       "description": _descriptionTEController.text.trim(),
-  //       "status": "New"
-  //     });
-  //     _createTaskInProgress = false;
-  //     if (mounted) {
-  //       setState(() {});
-  //     }
-  //     if (response.isSuccess) {
-  //       _subjetTEController.clear();
-  //       _descriptionTEController.clear();
-  //       if (mounted) {
-  //         showSnackMessage(context, "New task added!");
-  //       }
-  //     } else {
-  //       if (mounted) {
-  //         showSnackMessage(
-  //             context, "Failed to creat new task, try again!", true);
-  //       }
-  //     }
-  //   }
-  // }
+  Future<void> _createTask() async {
+    if (_formKey.currentState!.validate()) {
+      _createTaskInProgress = true;
+      if (mounted) {
+        setState(() {});
+      }
+      final NetworkResponse response =
+          await NetworkCaller().postRequest(Urls.createTask, body: {
+        "title": _subjetTEController.text.trim(),
+        "description": _descriptionTEController.text.trim(),
+        "status": "Cancelled"
+      });
+      _createTaskInProgress = false;
+      if (mounted) {
+        setState(() {});
+      }
+      if (response.isSuccess) {
+        _subjetTEController.clear();
+        _descriptionTEController.clear();
+        if (mounted) {
+          showSnackMessage(context, "New task added!");
+        }
+      } else {
+        if (mounted) {
+          showSnackMessage(
+              context, "Failed to creat new task, try again!", true);
+        }
+      }
+    }
+  }
 
   @override
   void dispose() {

@@ -1,17 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
-import 'package:task_manager_app/ui/screens/login_screen.dart';
-import 'package:task_manager_app/ui/screens/reset_password_screen.dart';
-import 'package:task_manager_app/ui/widget/body_background.dart';
+
+import '../data/network_caller/network_caller.dart';
+import '../data/utility/urls.dart';
+import 'login_screen.dart';
+import 'reset_password_screen.dart';
+import '../widget/body_background.dart';
 
 class PinVerificationScreen extends StatefulWidget {
-  const PinVerificationScreen({super.key});
+  const PinVerificationScreen({
+    super.key,
+    required this.email,
+  });
+
+  final String email;
 
   @override
   State<PinVerificationScreen> createState() => _PinVerificationScreenState();
 }
 
 class _PinVerificationScreenState extends State<PinVerificationScreen> {
+  final networkCaller = NetworkCaller();
+
+  String otp = '';
+
+  recoverVerifyOTP() async {
+    final response = await networkCaller.getRequest(
+      '${Urls.recoverVerifyOTP}/${widget.email}/$otp',
+    );
+    if (response.statusCode == 200) {
+      print(response.jsonResponse);
+      if (response.jsonResponse['status'] != 'fail') {
+        // ignore: use_build_context_synchronously
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ResetPasswordScreen(
+                email: widget.email,
+                otp: otp,
+              ),
+            ));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,8 +85,11 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                     enableActiveFill: true,
                     onCompleted: (v) {
                       //  print('completed');
+                      otp = v;
                     },
-                    onChanged: (value) {},
+                    onChanged: (value) {
+                      otp = value;
+                    },
                     beforeTextPaste: (text) {
                       return true;
                     },
@@ -65,14 +100,16 @@ class _PinVerificationScreenState extends State<PinVerificationScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const ResetPasswordScreen()));
-                        },
-                        child: const Text("Verify")),
+                      onPressed: () async {
+                        await recoverVerifyOTP();
+                        // Navigator.push(
+                        //     context,
+                        //     MaterialPageRoute(
+                        //         builder: (context) =>
+                        //             const ResetPasswordScreen()));
+                      },
+                      child: const Text("Verify"),
+                    ),
                   ),
                   const SizedBox(height: 48),
                   Row(

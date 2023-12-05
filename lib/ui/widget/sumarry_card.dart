@@ -16,10 +16,10 @@ class SummeryCard extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              "92",
+              count,
               style: Theme.of(context).textTheme.titleLarge,
             ),
-            const Text("NEW"),
+            Text(title),
           ],
         ),
       ),

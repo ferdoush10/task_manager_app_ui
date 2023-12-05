@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:task_manager_app/ui/screens/forgot_password_screen.dart';
-import 'package:task_manager_app/ui/screens/main_bottom_nav_screen.dart';
-import 'package:task_manager_app/ui/screens/sign_up_screen.dart';
-import 'package:task_manager_app/ui/widget/body_background.dart';
+import '../controllers/auth_controller.dart';
+import '../data/models/user_model.dart';
+import '../data/network_caller/network_caller.dart';
+import '../data/utility/urls.dart';
+import 'forgot_password_screen.dart';
+import 'main_bottom_nav_screen.dart';
+import 'sign_up_screen.dart';
+import '../widget/body_background.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,9 +15,33 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final networkCaller = NetworkCaller();
   final TextEditingController _emailTEController = TextEditingController();
   final TextEditingController _passwordTEController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  //TODO : #1 create a sign in function
+  Future<void> _signIn() async {
+    final response = await networkCaller.postRequest(
+      Urls.login,
+      body: {
+        "email": _emailTEController.text.trim(),
+        "password": _passwordTEController.text.trim(),
+      },
+      isLogin: true,
+    );
+    if (response.statusCode == 200) {
+      await AuthController.saveUserInformation(
+        response.jsonResponse['token'],
+        UserModel.fromJson(response.jsonResponse['data']),
+      );
+      // ignore: use_build_context_synchronously
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const MainBottomNavScreen()),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,13 +67,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: const InputDecoration(
                         hintText: "Email",
                       ),
-                      // validator: (String? value) {
-                      //   if (value?.isEmpty ?? true) {
-                      //     return "enter a email";
-                      //   } else {
-                      //     return null;
-                      //   }
-                      // },
+                      validator: (String? value) {
+                        if (value?.isEmpty ?? true) {
+                          return "enter a email";
+                        } else {
+                          return null;
+                        }
+                      },
                     ),
                     const SizedBox(height: 16),
                     //TextField For Password
@@ -55,13 +83,13 @@ class _LoginScreenState extends State<LoginScreen> {
                       decoration: const InputDecoration(
                         hintText: "Password",
                       ),
-                      // validator: (String? value) {
-                      //   if (value?.isEmpty ?? true) {
-                      //     return "enter a password";
-                      //   } else {
-                      //     return null;
-                      //   }
-                      // },
+                      validator: (String? value) {
+                        if (value?.isEmpty ?? true) {
+                          return "enter a password";
+                        } else {
+                          return null;
+                        }
+                      },
                     ),
 
                     const SizedBox(height: 16),
@@ -69,12 +97,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const MainBottomNavScreen()));
+                          onPressed: () async {
+                            if (_formKey.currentState!.validate()) {
+                              await _signIn();
+                            }
+
                             if (_formKey.currentState!.validate()) {}
                           },
                           child: const Icon(Icons.arrow_circle_right_outlined)),

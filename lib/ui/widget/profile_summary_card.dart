@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:task_manager_app/ui/screens/edit_profile_screen.dart';
-import 'package:task_manager_app/ui/screens/login_screen.dart';
+import '../controllers/auth_controller.dart';
+import '../screens/edit_profile_screen.dart';
+import '../screens/login_screen.dart';
 
 class ProfileSummaryCard extends StatefulWidget {
   const ProfileSummaryCard({
@@ -34,14 +35,16 @@ class _ProfileSummaryCardState extends State<ProfileSummaryCard> {
         //     : Image.memory(imageBytes),
         child: Icon(Icons.person),
       ),
-      title: const Text(
-        "Md Ferdoush Wahid ",
-        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+      title: Text(
+        '${AuthController.user?.firstName} ${AuthController.user?.lastName}',
+        style:
+            const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
       ),
-      subtitle: const Text("ferdoush@gmail.com"),
+      subtitle: Text(AuthController.user?.email ?? ''),
       trailing: IconButton(
-          onPressed: ()  {
+          onPressed: () {
             if (mounted) {
+              AuthController.clearAuthData();
               Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const LoginScreen()),

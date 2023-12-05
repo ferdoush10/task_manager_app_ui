@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:task_manager_app/ui/screens/pin_verification_screen.dart';
-import 'package:task_manager_app/ui/widget/body_background.dart';
-
+import '../data/network_caller/network_caller.dart';
+import '../data/utility/urls.dart';
+import 'pin_verification_screen.dart';
+import '../widget/body_background.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -11,6 +12,27 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final networkCaller = NetworkCaller();
+  final TextEditingController _emailTEController = TextEditingController();
+
+  recoverVerifyEmail() async {
+    final response = await networkCaller.getRequest(
+      '${Urls.recoverVerifyEmail}/${_emailTEController.text.trim()}',
+    );
+    if (response.statusCode == 200) {
+      print(response.jsonResponse);
+      // ignore: use_build_context_synchronously
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => PinVerificationScreen(
+            email: _emailTEController.text.trim(),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,6 +56,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   const SizedBox(height: 16),
                   //TextField For Email
                   TextFormField(
+                    controller: _emailTEController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: const InputDecoration(
                       hintText: "Email",
@@ -45,12 +68,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const PinVerificationScreen()));
+                        onPressed: () async {
+                          await recoverVerifyEmail();
                         },
                         child: const Icon(Icons.arrow_circle_right_outlined)),
                   ),
@@ -83,5 +102,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    _emailTEController.dispose();
+    super.dispose();
   }
 }
